@@ -4,9 +4,9 @@ interface
 
 const
 {$IFDEF DEBUG}
-  PJBank_URLAPI = 'https://sandbox.pjbank.com.br'; // Debug
+  PJBank_URLAPI_Sandbox = 'https://sandbox.pjbank.com.br'; // Debug
 {$ELSE}
-  PJBank_URLAPI = 'https://api.pjbank.com.br'; // Produção
+  PJBank_URLAPI_Producao = 'https://api.pjbank.com.br'; // Produção
 {$ENDIF}
 
 const

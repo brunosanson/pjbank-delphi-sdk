@@ -1,0 +1,3 @@
+[submodule "vendor/delphi-rest-client-api"]
+	path = vendor/delphi-rest-client-api
+	url = https://github.com/cadena/delphi-rest-client-api
