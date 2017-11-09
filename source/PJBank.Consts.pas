@@ -11,8 +11,8 @@ const
 
 const
   PJBank_Endpoint_CredenciarConta = '/recebimentos';
-  PJBank_Endpoint_EmitirBoleto = '/recebimentos/%s/transacoes';
-  PJBank_Endpoint_ImpressaoBoleto = '/recebimentos/%s/transacoes/lotes';
+  PJBank_Endpoint_EmitirBoleto = '/recebimentos/{{credencial-boleto}}/transacoes';
+  PJBank_Endpoint_ImpressaoBoleto = '/recebimentos/{{credencial-boleto}}/transacoes/lotes';
 
 implementation
 

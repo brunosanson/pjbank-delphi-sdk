@@ -90,7 +90,7 @@ class procedure TRestClientConfig.OnResponse(ARestClient: TRestClient;
   ResponseCode: Integer; const ResponseContent: string);
 begin
   if ResponseCode in [TStatusCode.OK.StatusCode, TStatusCode.CREATED.StatusCode] then
-    FLog.Add(ResponseContent + sLineBreak);
+    FLog.Add('Response: ' + ResponseContent + sLineBreak);
 end;
 
 end.

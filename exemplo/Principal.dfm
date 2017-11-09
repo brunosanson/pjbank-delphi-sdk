@@ -50,8 +50,9 @@ object FormPrincipal: TFormPrincipal
     Caption = 'Emitir Boleto'
     Enabled = False
     TabOrder = 2
+    OnClick = ButtonEmitirBoletoClick
   end
-  object Button1: TButton
+  object ButtonImprimirBoleto: TButton
     Left = 8
     Top = 166
     Width = 393
@@ -59,6 +60,7 @@ object FormPrincipal: TFormPrincipal
     Caption = 'Imprimir Boleto'
     Enabled = False
     TabOrder = 3
+    OnClick = ButtonImprimirBoletoClick
   end
   object MemoEmpresa: TMemo
     Left = 8
