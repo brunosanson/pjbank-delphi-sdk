@@ -45,7 +45,7 @@ object FormPrincipal: TFormPrincipal
   object ButtonEmitirBoleto: TButton
     Left = 8
     Top = 135
-    Width = 393
+    Width = 193
     Height = 25
     Caption = 'Emitir Boleto'
     Enabled = False
@@ -53,9 +53,9 @@ object FormPrincipal: TFormPrincipal
     OnClick = ButtonEmitirBoletoClick
   end
   object ButtonImprimirBoleto: TButton
-    Left = 8
-    Top = 166
-    Width = 393
+    Left = 207
+    Top = 135
+    Width = 194
     Height = 25
     Caption = 'Imprimir Boleto'
     Enabled = False
@@ -70,5 +70,15 @@ object FormPrincipal: TFormPrincipal
     Enabled = False
     ScrollBars = ssVertical
     TabOrder = 4
+  end
+  object ButtonImprimirTodosBoletosEmitidos: TButton
+    Left = 8
+    Top = 166
+    Width = 393
+    Height = 25
+    Caption = 'Imprimir Todos os Boletos Emitidos Recentemente'
+    Enabled = False
+    TabOrder = 5
+    OnClick = ButtonImprimirTodosBoletosEmitidosClick
   end
 end
