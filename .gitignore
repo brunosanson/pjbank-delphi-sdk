@@ -34,3 +34,5 @@ __history/
 
 .DS_Store
 TestResults/
+
+exemplo/Win32/*
