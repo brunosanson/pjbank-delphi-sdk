@@ -89,11 +89,13 @@
 				<Form>FormPrincipal</Form>
 				<FormType>dfm</FormType>
 			</DCCReference>
-			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Request.pas"/>
-			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Response.pas"/>
 			<DCCReference Include="..\source\PJBank.Consts.pas"/>
 			<DCCReference Include="..\source\boleto_bancario\credenciamento\PJBank.Empresa.Request.pas"/>
 			<DCCReference Include="..\source\boleto_bancario\credenciamento\PJBank.Empresa.Response.pas"/>
+			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Request.pas"/>
+			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Response.pas"/>
+			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Impressao.Request.pas"/>
+			<DCCReference Include="..\source\boleto_bancario\boleto\PJBank.Boleto.Impressao.Response.pas"/>
 			<DCCReference Include="RestClient.pas"/>
 			<DCCReference Include="StringUtils.pas"/>
 			<DCCReference Include="RestClientConfig.pas"/>
