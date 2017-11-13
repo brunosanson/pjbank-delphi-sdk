@@ -10,6 +10,7 @@ uses
   PJBank.Boleto.Response in '..\source\boleto_bancario\boleto\PJBank.Boleto.Response.pas',
   PJBank.Boleto.Impressao.Request in '..\source\boleto_bancario\boleto\PJBank.Boleto.Impressao.Request.pas',
   PJBank.Boleto.Impressao.Response in '..\source\boleto_bancario\boleto\PJBank.Boleto.Impressao.Response.pas',
+  PJBank.Extrato.Response in '..\source\boleto_bancario\extrato\PJBank.Extrato.Response.pas',
   RestClient in 'RestClient.pas',
   StringUtils in 'StringUtils.pas',
   RestClientConfig in 'RestClientConfig.pas';

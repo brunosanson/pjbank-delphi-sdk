@@ -2,8 +2,8 @@ object FormPrincipal: TFormPrincipal
   Left = 0
   Top = 0
   Caption = 'PJBank - Exemplo'
-  ClientHeight = 669
-  ClientWidth = 957
+  ClientHeight = 528
+  ClientWidth = 941
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,72 +13,86 @@ object FormPrincipal: TFormPrincipal
   OldCreateOrder = False
   WindowState = wsMaximized
   DesignSize = (
-    957
-    669)
+    941
+    528)
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelLog: TLabel
-    Left = 8
-    Top = 216
-    Width = 21
-    Height = 13
-    Caption = 'Log:'
-  end
   object ButtonCredenciar: TButton
     Left = 8
     Top = 8
     Width = 393
     Height = 25
-    Caption = 'Credenciar uma conta banc'#225'ria para recebimento com boletos'
+    Caption = '1'#186' - Credenciar uma conta banc'#225'ria para recebimento com boletos'
     TabOrder = 0
     OnClick = ButtonCredenciarClick
   end
   object MemoLog: TMemo
     Left = 8
-    Top = 240
-    Width = 941
-    Height = 421
+    Top = 132
+    Width = 925
+    Height = 388
     Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Consolas'
+    Font.Style = []
+    ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 1
   end
   object ButtonEmitirBoleto: TButton
     Left = 8
-    Top = 135
+    Top = 39
     Width = 193
     Height = 25
-    Caption = 'Emitir Boleto'
+    Caption = '2'#186' - Emitir Boleto'
     Enabled = False
     TabOrder = 2
     OnClick = ButtonEmitirBoletoClick
   end
   object ButtonImprimirBoleto: TButton
     Left = 207
-    Top = 135
+    Top = 39
     Width = 194
     Height = 25
-    Caption = 'Imprimir Boleto'
+    Caption = '3'#186' - Imprimir Boleto'
     Enabled = False
     TabOrder = 3
     OnClick = ButtonImprimirBoletoClick
   end
   object MemoEmpresa: TMemo
-    Left = 8
-    Top = 39
-    Width = 393
-    Height = 82
+    Left = 407
+    Top = 10
+    Width = 542
+    Height = 116
     Enabled = False
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Consolas'
+    Font.Style = []
+    ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 4
   end
   object ButtonImprimirTodosBoletosEmitidos: TButton
     Left = 8
-    Top = 166
+    Top = 70
     Width = 393
     Height = 25
-    Caption = 'Imprimir Todos os Boletos Emitidos Recentemente'
+    Caption = '4'#186' - Imprimir Todos os Boletos Emitidos Recentemente'
     Enabled = False
     TabOrder = 5
     OnClick = ButtonImprimirTodosBoletosEmitidosClick
+  end
+  object ButtonObterExtratoPagamento: TButton
+    Left = 8
+    Top = 101
+    Width = 393
+    Height = 25
+    Caption = '5'#186' - Obter Extrato Pagamento'
+    TabOrder = 6
+    OnClick = ButtonObterExtratoPagamentoClick
   end
 end

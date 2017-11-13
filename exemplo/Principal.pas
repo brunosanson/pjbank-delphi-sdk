@@ -20,7 +20,8 @@ uses
   PJBank.Boleto.Request,
   PJBank.Boleto.Response,
   System.Generics.Collections,
-  PJBank.Boleto.Impressao.Response;
+  PJBank.Boleto.Impressao.Response,
+  PJBank.Extrato.Response;
 
 type
   TFormPrincipal = class(TForm)
@@ -29,8 +30,9 @@ type
     ButtonEmitirBoleto: TButton;
     ButtonImprimirBoleto: TButton;
     MemoEmpresa: TMemo;
-    LabelLog: TLabel;
     ButtonImprimirTodosBoletosEmitidos: TButton;
+    ButtonObterExtratoPagamento: TButton;
+    procedure ButtonObterExtratoPagamentoClick(Sender: TObject);
     procedure ButtonImprimirTodosBoletosEmitidosClick(Sender: TObject);
     procedure ButtonCredenciarClick(Sender: TObject);
     procedure ButtonEmitirBoletoClick(Sender: TObject);
@@ -47,6 +49,7 @@ type
     procedure ValidarCredenciamentoEmpresa(EmpresaResponse: TEmpresaResponse);
     procedure ValidarEmissaoBoleto(BoletoResponse: TBoletoResponse);
     procedure AbrirLinkNoBrowser;
+    procedure ApresentarOsPagamentos(const Extrato: TExtrato);
     procedure SalvarDadosCredenciamento(EmpresaResponse: TEmpresaResponse);
     procedure LerDadosCredenciamento;
     procedure ValidarImpressaoEmLote(BoletosImpressaoResponse: TBoletosImpressaoResponse);
@@ -121,7 +124,69 @@ end;
 procedure TFormPrincipal.AtualizarMemoEmpresa;
 begin
   MemoEmpresa.Lines.Add('Credencial: ' + FCredencial);
-  MemoEmpresa.Lines.Add('X-Chave: ' + FChave);
+  MemoEmpresa.Lines.Add('X-Chave   : ' + FChave);
+end;
+
+procedure TFormPrincipal.ButtonObterExtratoPagamentoClick(Sender: TObject);
+var
+  Extrato: TExtrato;
+  URL: string;
+begin
+  URL := PJBank_URLAPI_Sandbox + PJBank_Endpoint_ExtratoRecebimentoPago;
+  URL := StringReplace(URL, '{{credencial-boleto}}', FCredencial, [rfIgnoreCase]);
+  URL := StringReplace(URL, '{{inicio}}', '10/05/2017', [rfIgnoreCase]);
+  URL := StringReplace(URL, '{{fim}}', '10/05/2017', [rfIgnoreCase]);
+
+  Extrato := nil;
+  try
+    Extrato :=
+      FRestClient
+      .Resource(URL)
+      .ContentType(RestUtils.MediaType_Json)
+      .Header('X-CHAVE', FChave)
+      .Get<TExtrato>;
+
+    ApresentarOsPagamentos(Extrato);
+  finally
+    Extrato.Free;
+  end;
+end;
+
+procedure TFormPrincipal.ApresentarOsPagamentos(const Extrato: TExtrato);
+var
+  P: TPagamento;
+  Total: Currency;
+  TotalLiquido: Currency;
+  FS: TFormatSettings;
+  I: Integer;
+begin
+  FS := TFormatSettings.Create;
+  FS.ThousandSeparator := ',';
+  FS.DecimalSeparator := '.';
+
+  I := 0;
+  Total := 0;
+  TotalLiquido := 0;
+  for P in Extrato do
+  begin
+    Inc(I);
+
+    MemoLog.Lines.Add('ID: ' + P.tid + '-' + P.tid_conciliacao);
+    MemoLog.Lines.Add('Pedido Número: ' + P.pedido_numero);
+    MemoLog.Lines.Add('Valor: R$ ' + P.valor);
+    MemoLog.Lines.Add('Valor Liquido: R$ ' + P.valor_liquido);
+    MemoLog.Lines.Add('Diferença: R$ ' + CurrToStr(StrToFloat(P.valor, FS) - StrToFloat(P.valor_liquido, FS)));
+    MemoLog.Lines.Add('Transação:' + P.data_transacao);
+    MemoLog.Lines.Add('Crédito na Conta:' + P.previsao_credito + sLineBreak);
+
+    Total := Total + StrToFloat(P.valor, FS);
+    TotalLiquido := TotalLiquido + StrToFloat(P.valor_liquido, FS);
+  end;
+  MemoLog.Lines.Add(' -- -- -- -- -- Resumo -- -- -- -- --' + sLineBreak);
+  MemoLog.Lines.Add('Total Bruto Recebido                 : ' + FloatToStrF(Total, ffCurrency, 10, 2));
+  MemoLog.Lines.Add('Total Liquido Recebido               : ' + FloatToStrF(TotalLiquido, ffCurrency, 10, 2));
+  MemoLog.Lines.Add('Diferença Recebida (Bruto - Liquido) : ' + FloatToStrF(Total-TotalLiquido, ffCurrency, 10, 2));
+  MemoLog.Lines.Add('Quantidade de Pagamentos             : ' + IntToStr(I));
 end;
 
 procedure TFormPrincipal.ButtonImprimirTodosBoletosEmitidosClick(Sender: TObject);
