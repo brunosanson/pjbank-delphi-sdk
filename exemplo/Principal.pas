@@ -21,7 +21,7 @@ uses
   PJBank.Boleto.Response,
   System.Generics.Collections,
   PJBank.Boleto.Impressao.Response,
-  PJBank.Extrato.Response;
+  PJBank.Boleto.Extrato.Response;
 
 type
   TFormPrincipal = class(TForm)
@@ -49,7 +49,7 @@ type
     procedure ValidarCredenciamentoEmpresa(EmpresaResponse: TEmpresaResponse);
     procedure ValidarEmissaoBoleto(BoletoResponse: TBoletoResponse);
     procedure AbrirLinkNoBrowser;
-    procedure ApresentarOsPagamentos(const Extrato: TExtrato);
+    procedure ApresentarOsPagamentos(const Extrato: TBoletoExtrato);
     procedure SalvarDadosCredenciamento(EmpresaResponse: TEmpresaResponse);
     procedure LerDadosCredenciamento;
     procedure ValidarImpressaoEmLote(BoletosImpressaoResponse: TBoletosImpressaoResponse);
@@ -129,7 +129,7 @@ end;
 
 procedure TFormPrincipal.ButtonObterExtratoPagamentoClick(Sender: TObject);
 var
-  Extrato: TExtrato;
+  Extrato: TBoletoExtrato;
   URL: string;
 begin
   URL := PJBank_URLAPI_Sandbox + PJBank_Endpoint_ExtratoRecebimentoPago;
@@ -144,7 +144,7 @@ begin
       .Resource(URL)
       .ContentType(RestUtils.MediaType_Json)
       .Header('X-CHAVE', FChave)
-      .Get<TExtrato>;
+      .Get<TBoletoExtrato>;
 
     ApresentarOsPagamentos(Extrato);
   finally
@@ -154,7 +154,7 @@ end;
 
 procedure TFormPrincipal.ApresentarOsPagamentos(const Extrato: TExtrato);
 var
-  P: TPagamento;
+  P: TBoletoPagamento;
   Total: Currency;
   TotalLiquido: Currency;
   FS: TFormatSettings;
@@ -171,21 +171,24 @@ begin
   begin
     Inc(I);
 
-    MemoLog.Lines.Add('ID: ' + P.tid + '-' + P.tid_conciliacao);
-    MemoLog.Lines.Add('Pedido Número: ' + P.pedido_numero);
+    MemoLog.Lines.Add('Id Único: ' + P.id_unico);
+    MemoLog.Lines.Add('Nosso Número: ' + P.nosso_numero);
+    MemoLog.Lines.Add('Banco: ' + P.banco_numero);
+    MemoLog.Lines.Add('Token Facilitador: ' + P.token_facilitador);
     MemoLog.Lines.Add('Valor: R$ ' + P.valor);
     MemoLog.Lines.Add('Valor Liquido: R$ ' + P.valor_liquido);
-    MemoLog.Lines.Add('Diferença: R$ ' + CurrToStr(StrToFloat(P.valor, FS) - StrToFloat(P.valor_liquido, FS)));
-    MemoLog.Lines.Add('Transação:' + P.data_transacao);
-    MemoLog.Lines.Add('Crédito na Conta:' + P.previsao_credito + sLineBreak);
+    MemoLog.Lines.Add('Vencimento: ' + P.data_vencimento);
+    MemoLog.Lines.Add('Pagamento: ' + P.data_pagamento);
+    MemoLog.Lines.Add('Crédito: ' + P.data_credito);
+    MemoLog.Lines.Add('Pagador: ' + P.pagador + sLineBreak);
 
     Total := Total + StrToFloat(P.valor, FS);
     TotalLiquido := TotalLiquido + StrToFloat(P.valor_liquido, FS);
   end;
   MemoLog.Lines.Add(' -- -- -- -- -- Resumo -- -- -- -- --' + sLineBreak);
-  MemoLog.Lines.Add('Total Bruto Recebido                 : ' + FloatToStrF(Total, ffCurrency, 10, 2));
+  MemoLog.Lines.Add('Total Recebido                       : ' + FloatToStrF(Total, ffCurrency, 10, 2));
   MemoLog.Lines.Add('Total Liquido Recebido               : ' + FloatToStrF(TotalLiquido, ffCurrency, 10, 2));
-  MemoLog.Lines.Add('Diferença Recebida (Bruto - Liquido) : ' + FloatToStrF(Total-TotalLiquido, ffCurrency, 10, 2));
+  MemoLog.Lines.Add('Diferença Recebida (Bruto - Liquido) : ' + FloatToStrF(Total - TotalLiquido, ffCurrency, 10, 2));
   MemoLog.Lines.Add('Quantidade de Pagamentos             : ' + IntToStr(I));
 end;
 
@@ -321,6 +324,7 @@ procedure TFormPrincipal.ValidarCredenciamentoEmpresa(EmpresaResponse: TEmpresaR
 begin
   if EmpresaResponse.status = IntToStr(TStatusCode.CREATED.StatusCode) then
   begin
+    MemoEmpresa.Clear;
     FCredencial := EmpresaResponse.credencial;
     FChave := EmpresaResponse.chave;
     AtualizarMemoEmpresa;
