@@ -21,23 +21,83 @@ uses
   PJBank.Boleto.Response,
   System.Generics.Collections,
   PJBank.Boleto.Impressao.Response,
-  PJBank.Boleto.Extrato.Response;
+  PJBank.Boleto.Extrato.Response,
+  Vcl.ComCtrls,
+  Vcl.ExtCtrls,
+  Data.DB,
+  Datasnap.DBClient,
+  Vcl.Grids,
+  Vcl.DBGrids;
 
 type
   TFormPrincipal = class(TForm)
-    ButtonCredenciar: TButton;
     MemoLog: TMemo;
+    PageControl: TPageControl;
+    tbaCredenciar: TTabSheet;
+    tabEmitirBoleto: TTabSheet;
+    tabExtratoPagamentoBoleto: TTabSheet;
+    GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
+    EditBoleto_NomeCliente: TLabeledEdit;
+    EditBoleto_EnderecoCliente: TLabeledEdit;
+    EditBoleto_ComplementoCliente: TLabeledEdit;
+    EditBoleto_CidadeCliente: TLabeledEdit;
+    EditBoleto_CNPJCliente: TLabeledEdit;
+    EditBoleto_NumeroCliente: TLabeledEdit;
+    EditBoleto_BairroCliente: TLabeledEdit;
+    EditBoleto_UFCliente: TLabeledEdit;
+    EditBoleto_CEPCliente: TLabeledEdit;
+    EditBoleto_Vencimento: TLabeledEdit;
+    EditBoleto_Valor: TLabeledEdit;
+    EditBoleto_Multa: TLabeledEdit;
+    EditBoleto_Juros: TLabeledEdit;
+    GroupBox3: TGroupBox;
+    EditCredencial_RazaoSocial: TLabeledEdit;
+    EditCredencial_CNPJ: TLabeledEdit;
+    EditCredencial_DDD: TLabeledEdit;
+    EditCredencial_Telefone: TLabeledEdit;
+    EditCredencial_Email: TLabeledEdit;
+    GroupBox4: TGroupBox;
+    EditCredencial_Banco: TLabeledEdit;
+    EditCredencial_Agencia: TLabeledEdit;
+    EditCredencial_Conta: TLabeledEdit;
+    ButtonCredenciar: TButton;
+    GroupBox5: TGroupBox;
+    MemoEmpresa: TMemo;
+    EditBoleto_Desconto: TLabeledEdit;
+    GroupBox6: TGroupBox;
+    EditBoleto_PedidoNumero: TLabeledEdit;
+    EditBoleto_Texto: TLabeledEdit;
+    EditBoleto_Logo: TLabeledEdit;
+    DBGrid1: TDBGrid;
+    ds: TDataSource;
+    cds: TClientDataSet;
     ButtonEmitirBoleto: TButton;
     ButtonImprimirBoleto: TButton;
-    MemoEmpresa: TMemo;
     ButtonImprimirTodosBoletosEmitidos: TButton;
     ButtonObterExtratoPagamento: TButton;
+    cdsVALOR: TCurrencyField;
+    cdsNOSSO_NUMERO: TStringField;
+    cdsNOSSO_NUMERO_ORIGINAL: TStringField;
+    cdsID_UNICO: TStringField;
+    cdsID_UNICO_ORIGINAL: TStringField;
+    cdsBANCO_NUMERO: TStringField;
+    cdsTOKEN_FACILITADOR: TStringField;
+    cdsVALOR_LIQUIDO: TCurrencyField;
+    cdsDATA_VENCIMENTO: TDateField;
+    cdsDATA_PAGAMENTO: TDateField;
+    cdsDATA_CREDITO: TDateField;
+    cdsPAGADOR: TStringField;
+    EditExtrato_DataFim: TDateTimePicker;
+    EditExtrato_DataInicio: TDateTimePicker;
+    Label1: TLabel;
     procedure ButtonObterExtratoPagamentoClick(Sender: TObject);
     procedure ButtonImprimirTodosBoletosEmitidosClick(Sender: TObject);
     procedure ButtonCredenciarClick(Sender: TObject);
     procedure ButtonEmitirBoletoClick(Sender: TObject);
     procedure ButtonImprimirBoletoClick(Sender: TObject);
   private
+    FFS: TFormatSettings;
     FRestClient: TRestClient;
     FCredencial: string;
     FChave: string;
@@ -101,8 +161,14 @@ end;
 constructor TFormPrincipal.Create(AOwner: TComponent);
 begin
   inherited;
+  FFS := TFormatSettings.Create;
+  FFS.ThousandSeparator := ',';
+  FFS.DecimalSeparator := '.';
+  FFS.ShortDateFormat := 'mm/dd/yyyy';
+
   FRestClient := TRestClientConfig.Novo(MemoLog.Lines);
   FListaPedidoNumero := TList<string>.Create;
+
   LerDadosCredenciamento;
   AtualizarMemoEmpresa;
   ButtonEmitirBoleto.Enabled := FCredencial <> '';
@@ -130,12 +196,15 @@ end;
 procedure TFormPrincipal.ButtonObterExtratoPagamentoClick(Sender: TObject);
 var
   Extrato: TBoletoExtrato;
-  URL: string;
+  URL, DataInicio, DataFim: string;
 begin
+  DataInicio := FormatDateTime(FFS.ShortDateFormat, EditExtrato_DataInicio.Date);
+  DataFim := FormatDateTime(FFS.ShortDateFormat, EditExtrato_DataFim.Date);
+
   URL := PJBank_URLAPI_Sandbox + PJBank_Endpoint_ExtratoRecebimentoPago;
   URL := StringReplace(URL, '{{credencial-boleto}}', FCredencial, [rfIgnoreCase]);
-  URL := StringReplace(URL, '{{inicio}}', '10/05/2017', [rfIgnoreCase]);
-  URL := StringReplace(URL, '{{fim}}', '10/05/2017', [rfIgnoreCase]);
+  URL := StringReplace(URL, '{{inicio}}', DataInicio, [rfIgnoreCase]);
+  URL := StringReplace(URL, '{{fim}}', DataFim, [rfIgnoreCase]);
 
   Extrato := nil;
   try
@@ -152,44 +221,33 @@ begin
   end;
 end;
 
-procedure TFormPrincipal.ApresentarOsPagamentos(const Extrato: TExtrato);
+procedure TFormPrincipal.ApresentarOsPagamentos(const Extrato: TBoletoExtrato);
 var
   P: TBoletoPagamento;
-  Total: Currency;
-  TotalLiquido: Currency;
-  FS: TFormatSettings;
-  I: Integer;
 begin
-  FS := TFormatSettings.Create;
-  FS.ThousandSeparator := ',';
-  FS.DecimalSeparator := '.';
-
-  I := 0;
-  Total := 0;
-  TotalLiquido := 0;
-  for P in Extrato do
-  begin
-    Inc(I);
-
-    MemoLog.Lines.Add('Id Único: ' + P.id_unico);
-    MemoLog.Lines.Add('Nosso Número: ' + P.nosso_numero);
-    MemoLog.Lines.Add('Banco: ' + P.banco_numero);
-    MemoLog.Lines.Add('Token Facilitador: ' + P.token_facilitador);
-    MemoLog.Lines.Add('Valor: R$ ' + P.valor);
-    MemoLog.Lines.Add('Valor Liquido: R$ ' + P.valor_liquido);
-    MemoLog.Lines.Add('Vencimento: ' + P.data_vencimento);
-    MemoLog.Lines.Add('Pagamento: ' + P.data_pagamento);
-    MemoLog.Lines.Add('Crédito: ' + P.data_credito);
-    MemoLog.Lines.Add('Pagador: ' + P.pagador + sLineBreak);
-
-    Total := Total + StrToFloat(P.valor, FS);
-    TotalLiquido := TotalLiquido + StrToFloat(P.valor_liquido, FS);
+  cds.DisableControls;
+  try
+    cds.CreateDataSet;
+    for P in Extrato do
+    begin
+      cds.Append;
+      cdsID_UNICO.AsString := P.id_unico;
+      cdsID_UNICO_ORIGINAL.AsString := P.id_unico_original;
+      cdsNOSSO_NUMERO.AsString := P.nosso_numero;
+      cdsNOSSO_NUMERO_ORIGINAL.AsString := P.nosso_numero_original;
+      cdsBANCO_NUMERO.AsString := P.banco_numero;
+      cdsTOKEN_FACILITADOR.AsString := P.token_facilitador;
+      cdsVALOR.AsCurrency := StrToFloat(P.valor, FFS);
+      cdsVALOR_LIQUIDO.AsCurrency := StrToFloat(P.valor_liquido, FFS);
+      cdsDATA_VENCIMENTO.AsDateTime := StrToDate(P.data_vencimento, FFS);
+      cdsDATA_PAGAMENTO.AsDateTime := StrToDate(P.data_pagamento, FFS);
+      cdsDATA_CREDITO.AsDateTime := StrToDate(P.data_credito, FFS);
+      cdsPAGADOR.AsString := P.pagador;
+      cds.Post;
+    end;
+  finally
+    cds.EnableControls;
   end;
-  MemoLog.Lines.Add(' -- -- -- -- -- Resumo -- -- -- -- --' + sLineBreak);
-  MemoLog.Lines.Add('Total Recebido                       : ' + FloatToStrF(Total, ffCurrency, 10, 2));
-  MemoLog.Lines.Add('Total Liquido Recebido               : ' + FloatToStrF(TotalLiquido, ffCurrency, 10, 2));
-  MemoLog.Lines.Add('Diferença Recebida (Bruto - Liquido) : ' + FloatToStrF(Total - TotalLiquido, ffCurrency, 10, 2));
-  MemoLog.Lines.Add('Quantidade de Pagamentos             : ' + IntToStr(I));
 end;
 
 procedure TFormPrincipal.ButtonImprimirTodosBoletosEmitidosClick(Sender: TObject);
@@ -261,37 +319,37 @@ end;
 function TFormPrincipal.NovaEmpresa: TEmpresaRequest;
 begin
   Result := TEmpresaRequest.Create;
-  Result.nome_empresa := 'Empresa de Exemplo';
-  Result.conta_repasse := '99999-9';
-  Result.agencia_repasse := '0001';
-  Result.banco_repasse := '001';
-  Result.cnpj := InputBox('CNPJ', 'Informe um CNPJ válido para credenciamento da empresa', '93764999000126');
-  Result.ddd := '19';
-  Result.telefone := '40096830';
-  Result.email := 'atendimento@pjbank.com.br';
+  Result.nome_empresa := EditCredencial_RazaoSocial.Text;
+  Result.cnpj := EditCredencial_CNPJ.Text;
+  Result.ddd := EditCredencial_DDD.Text;
+  Result.telefone := EditCredencial_Telefone.Text;
+  Result.email := EditCredencial_Email.Text;
+  Result.banco_repasse := EditCredencial_Banco.Text;
+  Result.agencia_repasse := EditCredencial_Agencia.Text;
+  Result.conta_repasse := EditCredencial_Conta.Text;
 end;
 
 function TFormPrincipal.NovoBoleto: TBoletoRequest;
 begin
   Result := TBoletoRequest.Create;
-  Result.vencimento := '11/28/2017';
-  Result.valor := 100.00;
-  Result.juros := 1;
-  Result.multa := 2;
-  Result.desconto := 0;
-  Result.nome_cliente := 'Nome do Pagador';
-  Result.cpf_cliente := '46801303694';
-  Result.endereco_cliente := 'Endereço do Pagador';
-  Result.numero_cliente := '12345';
-  Result.complemento_cliente := 'Bloco 1 - Apto 2';
-  Result.bairro_cliente := 'Bairro do Pagador';
-  Result.cidade_cliente := 'Cidade do Pagador';
-  Result.estado_cliente := 'SP';
-  Result.cep_cliente := '13301510';
-  Result.logo_url := 'https://wallpapercave.com/wp/wp2239995.jpg';
-  Result.texto := 'Descrição dos produtos ou serviços';
+  Result.vencimento := EditBoleto_Vencimento.Text;
+  Result.valor := StrToFloat(EditBoleto_Valor.Text, FFS);
+  Result.juros := StrToFloat(EditBoleto_Juros.Text, FFS);
+  Result.multa := StrToFloat(EditBoleto_Multa.Text, FFS);
+  Result.desconto := StrToFloat(EditBoleto_Desconto.Text, FFS);
+  Result.nome_cliente := EditBoleto_NomeCliente.Text;
+  Result.cpf_cliente := EditBoleto_CNPJCliente.Text;
+  Result.endereco_cliente := EditBoleto_EnderecoCliente.Text;
+  Result.numero_cliente := EditBoleto_NumeroCliente.Text;
+  Result.complemento_cliente := EditBoleto_ComplementoCliente.Text;
+  Result.bairro_cliente := EditBoleto_BairroCliente.Text;
+  Result.cidade_cliente := EditBoleto_CidadeCliente.Text;
+  Result.estado_cliente := EditBoleto_UFCliente.Text;
+  Result.cep_cliente := EditBoleto_CEPCliente.Text;
+  Result.logo_url := EditBoleto_Logo.Text;
+  Result.texto := EditBoleto_Texto.Text;
   Result.grupo := '';
-  Result.pedido_numero := InputBox('Número do Pedido', 'Mantenha o mesmo número para edição do boleto. ', '1');
+  Result.pedido_numero := EditBoleto_PedidoNumero.Text;
 end;
 
 procedure TFormPrincipal.SalvarDadosCredenciamento(EmpresaResponse: TEmpresaResponse);
